@@ -22,7 +22,7 @@ const kDemo = false;
 // same as version in pubspec.yaml, the updater checks against this
 const kVersion = '1.0.0';
 // latest.json on github: version, url, sha256, notes
-const kUpdateUrl = 'https://raw.githubusercontent.com/FaisalDaGoodBoi/lightcat-sideloader/main/latest.json';
+const kUpdateUrl = 'https://raw.githubusercontent.com/faisaldacoolkid/lightcat-sideloader/main/latest.json';
 
 ServerSocket? _instanceLock;
 
