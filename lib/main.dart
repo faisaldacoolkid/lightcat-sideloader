@@ -10971,6 +10971,7 @@ class Cast extends ChangeNotifier {
   Cast._();
 
   Process? _view, _rec;
+  String? _recOn;
   bool _demoView = false, _demoRec = false;
   DateTime? recSince;
   bool shooting = false;
@@ -11113,9 +11114,11 @@ class Cast extends ChangeNotifier {
     }
     if (path == null) return 'scrcpy is missing. Reinstall Lightcat to get it back.';
     await Directory(dir).create(recursive: true);
-    final file = '$dir\\${_stamp(d.name)}.mkv';
+    final file = '$dir\\${_stamp(d.name)}.mp4';
     final args = await _args(d);
-    args.addAll(['--no-window', '--no-playback', '--no-control', '--record=$file', '--record-format=mkv']);
+    args.addAll(
+        ['--verbosity=warn', '--no-window', '--no-playback', '--no-control', '--record=$file', '--record-format=mp4']);
+    _recOn = d.serial;
     final t0 = DateTime.now();
     try {
       _rec = await _start(args, (code, err) {
@@ -11143,7 +11146,11 @@ class Cast extends ChangeNotifier {
     }
     final p = _rec;
     if (p == null) return;
-    await Process.run('taskkill', ['/PID', '${p.pid}', '/T', '/F']);
+    await Adb.shell("pkill -f 'scrcpy.Server.*log_level=warn'", on: _recOn);
+    for (var n = 0; n < 20 && _rec == p; n++) {
+      await Future.delayed(const Duration(milliseconds: 250));
+    }
+    if (_rec == p) await Process.run('taskkill', ['/PID', '${p.pid}', '/T', '/F']);
   }
 
   Future<void> stopAll() async {
@@ -11447,7 +11454,13 @@ class _RecClock extends StatefulWidget {
 }
 
 class _RecClockState extends State<_RecClock> {
-  late final Timer _t = Timer.periodic(const Duration(seconds: 1), (_) => setState(() {}));
+  late final Timer _t;
+
+  @override
+  void initState() {
+    super.initState();
+    _t = Timer.periodic(const Duration(seconds: 1), (_) => setState(() {}));
+  }
 
   @override
   void dispose() {
